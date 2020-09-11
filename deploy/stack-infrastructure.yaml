@@ -1,0 +1,104 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: weather-lambda - artifacts bucket
+
+Parameters:
+  Service:
+    Description: The name of the service
+    Type: String
+  OpsgenieKey:
+    Description: API key for OpsGenie integration
+    Type: String
+    NoEcho: true
+    Default: ''
+
+Conditions:
+  HasOpsgenie: !Equals [ !Ref OpsgenieKey, '' ]
+
+Resources:
+  # Managed LogGroup to add logs retention
+  LambdaLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${Service}
+      RetentionInDays: 3
+
+  # OpsGenieTopic for alerting
+  AlertsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub ${Service}-OpsGenieTopic
+      Subscription: !If
+        - HasOpsgenie
+        - - Endpoint: !Sub https://api.opsgenie.com/v1/json/cloudwatch?apiKey=${OpsgenieKey}
+            Protocol: https
+        - !Ref AWS::NoValue
+
+  TopicPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Sid: AllowCurrentAccountToPublish
+            Principal:
+              AWS: !Ref AWS::AccountId
+            Action: sns:Publish
+            Effect: Allow
+            Resource: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:${AlertsTopic.TopicName}
+      Topics:
+        - Ref: AlertsTopic
+
+  ArtifactsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: Private
+      BucketName: !Sub ${Service}-artifacts
+      LifecycleConfiguration:
+        Rules:
+          - Status: Disabled
+            ExpirationInDays: 365
+
+  BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref ArtifactsBucket
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: AllowCurrentAccountBucketAccess
+            Effect: Allow
+            Principal:
+              AWS:
+                - !Sub arn:aws:iam::${AWS::AccountId}:root
+            Action:
+              - s3:ListBucket
+            Resource: !Sub arn:aws:s3:::${ArtifactsBucket}
+          - Sid: AllowFiZZArtifactsUpload
+            Effect: Allow
+            Principal:
+              AWS:
+                - arn:aws:iam::544725753551:role/jenkins-slave-build
+            Action:
+              - s3:PutObject
+            Resource: !Sub arn:aws:s3:::${ArtifactsBucket}/*
+          - Sid: AllowCurrentAccountAssetsAccess
+            Effect: Allow
+            Principal:
+              AWS:
+                - !Sub arn:aws:iam::${AWS::AccountId}:root
+            Action:
+              - s3:GetObject
+              - s3:GetObjectAcl
+              - s3:GetObjectTagging
+            Resource: !Sub arn:aws:s3:::${ArtifactsBucket}/*
+
+Outputs:
+  ArtifactsBucket:
+    Description: Artifacts bucket
+    Value: !Ref ArtifactsBucket
+    Export:
+      Name: !Sub ${Service}-ArtifactsBucket
+  OpsgenieTopic:
+    Description: OpsGenie topic
+    Value: !Ref AlertsTopic
+    Export:
+      Name: !Sub ${Service}-AlertsTopic

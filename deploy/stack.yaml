@@ -1,0 +1,90 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: weather-lambda - Lambda to get weather data
+
+Parameters:
+  Service:
+    Description: Name of the Lambda
+    Type: String
+  Version:
+    Description: Lambda version
+    Type: String
+
+Resources:
+  Lambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Ref Service
+      Handler: "com.scout24.weatherlambda.WeatherLambda::handle"
+      Role: !GetAtt LambdaRole.Arn
+      Code:
+        S3Bucket:
+          Fn::ImportValue: !Sub ${Service}-ArtifactsBucket
+        S3Key: !Sub ${Service}-${Version}.zip
+      Environment:
+        Variables:
+          JAVA_TOOL_OPTIONS: "-Dlogback.configurationFile=logback-prod.xml"
+      Runtime: java11
+      MemorySize: 1024
+      Timeout: 300
+
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: root
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Sid: AllowToWriteLogs
+                Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*
+
+  LambdaErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: !Sub ${Lambda} - Triggered too many invocation errors
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref Lambda
+      AlarmActions:
+        - Fn::ImportValue: !Sub ${Service}-AlertsTopic
+      OKActions:
+        - Fn::ImportValue: !Sub ${Service}-AlertsTopic
+
+  LambdaTooManyThrottlesAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: !Sub ${Lambda} - Triggered too many throttles
+      MetricName: Throttles
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Period: 60
+      EvaluationPeriods: 5
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref Lambda
+      AlarmActions:
+        - Fn::ImportValue: !Sub ${Service}-AlertsTopic
+      OKActions:
+        - Fn::ImportValue: !Sub ${Service}-AlertsTopic
