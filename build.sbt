@@ -17,10 +17,8 @@ val versions = new {
 
 lazy val root = project
   .in(file("."))
-  .enablePlugins(ScoutLintingPlugin, ScoutWartRemoverPlugin)
   .enablePlugins(JavaAppPackaging)
   .settings(
-    organization := "com.autoscout24",
     name := "weather-lambda",
     version := sys.env.getOrElse("VERSION", "1.0-SNAPSHOT"),
     scalaVersion := versions.scala,
@@ -33,8 +31,10 @@ lazy val root = project
       // Json
       "io.circe" %% "circe-generic" % versions.circe,
       // AWS
-      "com.amazonaws" % "aws-lambda-java-core"   % versions.lambdaCore,
-      "com.amazonaws" % "aws-lambda-java-events" % versions.lambdaEvents,
+      "com.amazonaws"           % "aws-lambda-java-core"     % versions.lambdaCore,
+      "com.amazonaws"           % "aws-lambda-java-events"   % versions.lambdaEvents,
+      "org.scala-lang.modules" %% "scala-xml"                % "1.2.0",
+      "org.scala-lang"          % "scala-parser-combinators" % "2.11.0-M4",
     ),
     topLevelDirectory := None,
   )

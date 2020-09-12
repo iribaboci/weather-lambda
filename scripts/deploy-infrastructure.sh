@@ -10,13 +10,7 @@ aws cloudformation deploy \
     --stack-name "${SERVICE}-infrastructure" \
     --parameter-overrides \
         "Service=$SERVICE" \
-        "UseCase=$USECASE" \
-        "Segment=$SEGMENT" \
         "Team=$TEAM" \
-        "Vertical=$VERTICAL" \
     --tags \
-        "vertical=${VERTICAL}" \
-        "segment=${SEGMENT}" \
-        "usecase=${USECASE}" \
         "team=${TEAM}" \
         "service=${SERVICE}"

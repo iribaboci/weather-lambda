@@ -1,4 +1,4 @@
-loadLibrary "as24-fizz-community-library@v0.11.0"
+
 
 pipeline {
     agent none

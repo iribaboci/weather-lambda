@@ -1,10 +1,8 @@
-export AWS_DEFAULT_REGION="eu-west-1"
+export AWS_DEFAULT_REGION="us-east-2"
 
 export SERVICE="weather-lambda"
-
-export VERTICAL=template-vertical
-export SEGMENT=template-segment
-export USECASE=template-usecase
-export TEAM=i-ntothenetwork
+export TEAM=intothenetwork
 
 export ARTIFACTS_BUCKET="${SERVICE}-artifacts"
+
+export VERSION=1 #change version everytime you deploy it

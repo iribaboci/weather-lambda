@@ -5,14 +5,6 @@ Parameters:
   Service:
     Description: The name of the service
     Type: String
-  OpsgenieKey:
-    Description: API key for OpsGenie integration
-    Type: String
-    NoEcho: true
-    Default: ''
-
-Conditions:
-  HasOpsgenie: !Equals [ !Ref OpsgenieKey, '' ]
 
 Resources:
   # Managed LogGroup to add logs retention
@@ -21,31 +13,6 @@ Resources:
     Properties:
       LogGroupName: !Sub /aws/lambda/${Service}
       RetentionInDays: 3
-
-  # OpsGenieTopic for alerting
-  AlertsTopic:
-    Type: AWS::SNS::Topic
-    Properties:
-      TopicName: !Sub ${Service}-OpsGenieTopic
-      Subscription: !If
-        - HasOpsgenie
-        - - Endpoint: !Sub https://api.opsgenie.com/v1/json/cloudwatch?apiKey=${OpsgenieKey}
-            Protocol: https
-        - !Ref AWS::NoValue
-
-  TopicPolicy:
-    Type: AWS::SNS::TopicPolicy
-    Properties:
-      PolicyDocument:
-        Statement:
-          - Sid: AllowCurrentAccountToPublish
-            Principal:
-              AWS: !Ref AWS::AccountId
-            Action: sns:Publish
-            Effect: Allow
-            Resource: !Sub arn:aws:sns:${AWS::Region}:${AWS::AccountId}:${AlertsTopic.TopicName}
-      Topics:
-        - Ref: AlertsTopic
 
   ArtifactsBucket:
     Type: AWS::S3::Bucket
@@ -97,8 +64,3 @@ Outputs:
     Value: !Ref ArtifactsBucket
     Export:
       Name: !Sub ${Service}-ArtifactsBucket
-  OpsgenieTopic:
-    Description: OpsGenie topic
-    Value: !Ref AlertsTopic
-    Export:
-      Name: !Sub ${Service}-AlertsTopic

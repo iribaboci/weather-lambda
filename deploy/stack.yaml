@@ -14,7 +14,7 @@ Resources:
     Type: AWS::Lambda::Function
     Properties:
       FunctionName: !Ref Service
-      Handler: "com.scout24.weatherlambda.WeatherLambda::handle"
+      Handler: "dogus.datathon.weatherlambda.WeatherLambda::handle"
       Role: !GetAtt LambdaRole.Arn
       Code:
         S3Bucket:
@@ -65,10 +65,6 @@ Resources:
       Dimensions:
         - Name: FunctionName
           Value: !Ref Lambda
-      AlarmActions:
-        - Fn::ImportValue: !Sub ${Service}-AlertsTopic
-      OKActions:
-        - Fn::ImportValue: !Sub ${Service}-AlertsTopic
 
   LambdaTooManyThrottlesAlarm:
     Type: AWS::CloudWatch::Alarm
@@ -84,7 +80,3 @@ Resources:
       Dimensions:
         - Name: FunctionName
           Value: !Ref Lambda
-      AlarmActions:
-        - Fn::ImportValue: !Sub ${Service}-AlertsTopic
-      OKActions:
-        - Fn::ImportValue: !Sub ${Service}-AlertsTopic

@@ -1,9 +1,9 @@
-# https://docs.services.as24.tech/best-practices/metadata/
+
 type: application
 name: weather-lambda
 id: weather-lambda
 product: weather-lambda
-vertical: as24
+vertical: weather-lambda
 availability: false
 confidentiality: public
 integrity: false
@@ -13,8 +13,8 @@ lifecycle: preview
 description: |
   Lambda to get weather data
 owners:
-  - template-email@autoscout24.com
+  - tahirbaboci96@gmail.com
 links:
   - type: documentation
-    address: https://github.com/AutoScout24/weather-lambda
+    address: https://github.com/iribaboci/weather-lambda
 platform: aws

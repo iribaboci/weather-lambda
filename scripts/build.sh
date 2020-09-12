@@ -10,6 +10,4 @@ for STACK in ${MYDIR}/../deploy/stack*.y*ml; do
     aws cloudformation validate-template --template-body "file://${STACK}"
 done
 
-sbt \
-    formatCheck \
-    "all test universal:packageBin"
+sbt "all test universal:packageBin"
