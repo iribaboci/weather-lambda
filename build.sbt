@@ -34,7 +34,7 @@ lazy val root = project
       "com.amazonaws"           % "aws-lambda-java-core"     % versions.lambdaCore,
       "com.amazonaws"           % "aws-lambda-java-events"   % versions.lambdaEvents,
       "org.scala-lang.modules" %% "scala-xml"                % "1.2.0",
-      "org.scala-lang"          % "scala-parser-combinators" % "2.11.0-M4",
+      "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.2",
     ),
     topLevelDirectory := None,
   )

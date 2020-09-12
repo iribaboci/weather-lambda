@@ -1,4 +1,5 @@
 package dogus.datathon.weatherlambda
+
 import scala.util.parsing.json._
 import com.typesafe.scalalogging.StrictLogging
 import com.amazonaws.services.lambda.runtime.Context
@@ -27,9 +28,20 @@ object WeatherLambda extends StrictLogging {
     def get(url: String) = scala.io.Source.fromURL(url).mkString
     try {
       val content = get(url)
+      val result = for {
+        Some(M(map)) <- List(JSON.parseFull(content))
+        M(outputs) = map("outputs")
+        S(csv)     = outputs("csv")
+      } yield csv
+      println(result.toString())
     } catch {
       case ioe: java.io.IOException             => // handle this
       case ste: java.net.SocketTimeoutException => // handle this
     }
   }
 }
+
+class CC[T] { def unapply(a: Any): Option[T] = Some(a.asInstanceOf[T]) }
+
+object M extends CC[Map[String, Any]]
+object S extends CC[String]
